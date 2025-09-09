@@ -1,0 +1,1144 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Architect: Design Your Time-Efficient Training Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .chart-container {
+            min-height: 250px;
+            max-height: 400px;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .workout-phase {
+            transition: all 0.3s ease;
+        }
+        .workout-phase:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .challenge-card {
+            transition: all 0.3s ease;
+        }
+        .challenge-card:hover {
+            transform: scale(1.02);
+        }
+        .progress-fill {
+            transition: width 0.5s ease;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button.active {
+            background-color: rgb(59 130 246);
+            color: white;
+        }
+        .exercise-item {
+            transition: all 0.3s ease;
+        }
+        .exercise-item:hover {
+            background-color: rgb(243 244 246);
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                min-height: 200px;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Workout Architect</h1>
+            <p class="text-xl text-gray-600 mb-4">Design Your Time-Efficient Training Plan</p>
+            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded max-w-2xl mx-auto">
+                <p class="font-medium">Challenge: Can you design a full-body workout in under 45 minutes?</p>
+                <p class="text-sm mt-1">Explore how different exercise parameters impact your total workout time!</p>
+            </div>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button class="tab-button px-4 py-2 font-medium text-gray-700 rounded-t-lg active" onclick="switchTab('builder')">
+                <i class="fas fa-dumbbell mr-2"></i>Workout Builder
+            </button>
+            <button class="tab-button px-4 py-2 font-medium text-gray-700 rounded-t-lg" onclick="switchTab('challenges')">
+                <i class="fas fa-trophy mr-2"></i>Challenges
+            </button>
+            <button class="tab-button px-4 py-2 font-medium text-gray-700 rounded-t-lg" onclick="switchTab('report')">
+                <i class="fas fa-chart-pie mr-2"></i>Workout Report
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="builder-tab" class="tab-content active">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Workout Builder Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Workout Builder</h2>
+                    
+                    <!-- Warm-up and Cool-down -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Warm-up Time (minutes)</label>
+                            <input type="number" id="warmup-time" min="0" max="30" value="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cool-down Time (minutes)</label>
+                            <input type="number" id="cooldown-time" min="0" max="30" value="5" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Exercise Recovery Time -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Exercise Recovery Time (seconds)</label>
+                        <input type="number" id="recovery-time" min="0" max="300" value="60" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Exercises List -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-lg font-semibold text-gray-800">Exercises</h3>
+                            <button onclick="addExercise()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition">
+                                <i class="fas fa-plus mr-1"></i>Add Exercise
+                            </button>
+                        </div>
+                        <div id="exercises-container" class="space-y-4">
+                            <!-- Exercises will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Global Parameters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rest Time Between Sets (seconds)</label>
+                            <input type="number" id="rest-time" min="0" max="300" value="60" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Default Tempo</label>
+                            <select id="default-tempo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="3">Slow (3s per rep)</option>
+                                <option value="2" selected>Moderate (2s per rep)</option>
+                                <option value="1">Fast (1s per rep)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-time Results Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Workout Analysis</h2>
+                    
+                    <!-- Total Time Display -->
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6 text-center">
+                        <p class="text-sm text-gray-600 mb-1">Total Workout Time</p>
+                        <p id="total-time" class="text-3xl font-bold text-blue-600">00:00</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+                            <div id="time-progress" class="progress-fill bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Target: 45 minutes</p>
+                    </div>
+
+                    <!-- Time Breakdown -->
+                    <div class="space-y-3 mb-6">
+                        <div class="workout-phase bg-orange-50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                                <span class="font-medium">Warm-up</span>
+                            </div>
+                            <span id="warmup-display" class="font-semibold">5:00</span>
+                        </div>
+                        <div class="workout-phase bg-green-50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <span class="font-medium">Exercise Time</span>
+                            </div>
+                            <span id="exercise-time-display" class="font-semibold">0:00</span>
+                        </div>
+                        <div class="workout-phase bg-yellow-50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                                <span class="font-medium">Rest Time</span>
+                            </div>
+                            <span id="rest-time-display" class="font-semibold">0:00</span>
+                        </div>
+                        <div class="workout-phase bg-purple-50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                                <span class="font-medium">Transition Time</span>
+                            </div>
+                            <span id="transition-time-display" class="font-semibold">0:00</span>
+                        </div>
+                        <div class="workout-phase bg-blue-50 p-3 rounded-lg flex justify-between items-center">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                                <span class="font-medium">Cool-down</span>
+                            </div>
+                            <span id="cooldown-display" class="font-semibold">5:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Time Distribution Chart -->
+                    <div class="chart-container">
+                        <canvas id="time-distribution-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Challenges Tab -->
+        <div id="challenges-tab" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Workout Challenges</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Time Challenge -->
+                    <div class="challenge-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border border-blue-200">
+                        <div class="text-blue-600 text-3xl mb-3">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Time Challenge</h3>
+                        <p class="text-gray-600 mb-4">Design a full-body workout in under 45 minutes</p>
+                        <button onclick="startChallenge('time')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition">
+                            Start Challenge
+                        </button>
+                    </div>
+
+                    <!-- Exercise Limit Challenge -->
+                    <div class="challenge-card bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border border-green-200">
+                        <div class="text-green-600 text-3xl mb-3">
+                            <i class="fas fa-list-ol"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Exercise Limit Challenge</h3>
+                        <p class="text-gray-600 mb-4">Complete these exercises in the shortest time possible</p>
+                        <button onclick="startChallenge('exercise')" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-md transition">
+                            Start Challenge
+                        </button>
+                    </div>
+
+                    <!-- Free Exploration -->
+                    <div class="challenge-card bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border border-purple-200">
+                        <div class="text-purple-600 text-3xl mb-3">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Free Exploration</h3>
+                        <p class="text-gray-600 mb-4">Experiment without constraints</p>
+                        <button onclick="startChallenge('free')" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-md transition">
+                            Start Exploring
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Challenge Status -->
+                <div id="challenge-status" class="mt-8 p-4 bg-gray-50 rounded-lg hidden">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Challenge Status</h3>
+                    <div id="challenge-details" class="text-gray-600"></div>
+                    <div id="challenge-result" class="mt-3 font-medium hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Tab -->
+        <div id="report-tab" class="tab-content">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Workout Report</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Workout Summary -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Workout Summary</h3>
+                        <div id="workout-summary" class="space-y-3">
+                            <!-- Summary will be populated here -->
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-4">Time Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="report-pie-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Insights -->
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Workout Insights</h3>
+                        <div id="workout-insights" class="space-y-4">
+                            <!-- Insights will be populated here -->
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-4">Efficiency Analysis</h3>
+                        <div class="chart-container">
+                            <canvas id="efficiency-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let exercises = [];
+        let exerciseCounter = 0;
+        let timeDistributionChart = null;
+        let reportPieChart = null;
+        let efficiencyChart = null;
+        let currentChallenge = null;
+
+        // Exercise options
+        const exerciseOptions = [
+            'Squats', 'Push-ups', 'Rows', 'Plank', 'Lunges', 'Deadlifts', 
+            'Bench Press', 'Pull-ups', 'Shoulder Press', 'Bicep Curls',
+            'Tricep Dips', 'Leg Press', 'Calf Raises', 'Crunches', 'Mountain Climbers'
+        ];
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('Initializing Workout Architect application...');
+                
+                // Add event listeners
+                document.getElementById('warmup-time').addEventListener('input', updateCalculations);
+                document.getElementById('cooldown-time').addEventListener('input', updateCalculations);
+                document.getElementById('recovery-time').addEventListener('input', updateCalculations);
+                document.getElementById('rest-time').addEventListener('input', updateCalculations);
+                document.getElementById('default-tempo').addEventListener('change', updateCalculations);
+                
+                // Add initial exercises
+                addExercise();
+                addExercise();
+                addExercise();
+                
+                // Initialize charts
+                initializeCharts();
+                
+                console.log('Application initialized successfully');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                alert('An error occurred while initializing the application. Please refresh the page.');
+            }
+        });
+
+        // Add a new exercise to the workout
+        function addExercise() {
+            try {
+                exerciseCounter++;
+                const exerciseId = `exercise-${exerciseCounter}`;
+                
+                const exerciseDiv = document.createElement('div');
+                exerciseDiv.className = 'exercise-item bg-gray-50 p-4 rounded-lg border border-gray-200';
+                exerciseDiv.id = exerciseId;
+                
+                exerciseDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="font-medium text-gray-800">Exercise ${exerciseCounter}</h4>
+                        <button onclick="removeExercise('${exerciseId}')" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Exercise</label>
+                            <select class="exercise-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                ${exerciseOptions.map(exercise => `<option value="${exercise}">${exercise}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sets</label>
+                            <input type="number" class="sets-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" max="10" value="3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Reps</label>
+                            <input type="number" class="reps-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" max="50" value="10">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tempo</label>
+                            <select class="tempo-select w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="3">Slow (3s per rep)</option>
+                                <option value="2" selected>Moderate (2s per rep)</option>
+                                <option value="1">Fast (1s per rep)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-sm text-gray-600">
+                        <span class="exercise-time">Time per set: 20 seconds</span>
+                    </div>
+                `;
+                
+                document.getElementById('exercises-container').appendChild(exerciseDiv);
+                
+                // Add event listeners to the new exercise inputs
+                const exerciseElement = document.getElementById(exerciseId);
+                exerciseElement.querySelectorAll('select, input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        updateExerciseTime(exerciseId);
+                        updateCalculations();
+                    });
+                });
+                
+                // Update exercise time display
+                updateExerciseTime(exerciseId);
+                
+                // Update calculations
+                updateCalculations();
+                
+                console.log(`Added exercise ${exerciseCounter}`);
+            } catch (error) {
+                console.error('Error adding exercise:', error);
+                alert('An error occurred while adding an exercise. Please try again.');
+            }
+        }
+
+        // Remove an exercise from the workout
+        function removeExercise(exerciseId) {
+            try {
+                const exerciseElement = document.getElementById(exerciseId);
+                if (exerciseElement) {
+                    exerciseElement.remove();
+                    updateCalculations();
+                    console.log(`Removed exercise ${exerciseId}`);
+                }
+            } catch (error) {
+                console.error('Error removing exercise:', error);
+                alert('An error occurred while removing the exercise. Please try again.');
+            }
+        }
+
+        // Update the time display for a specific exercise
+        function updateExerciseTime(exerciseId) {
+            try {
+                const exerciseElement = document.getElementById(exerciseId);
+                if (!exerciseElement) return;
+                
+                const repsInput = exerciseElement.querySelector('.reps-input');
+                const tempoSelect = exerciseElement.querySelector('.tempo-select');
+                
+                if (!repsInput || !tempoSelect) return;
+                
+                const reps = parseInt(repsInput.value) || 0;
+                const tempo = parseInt(tempoSelect.value) || 2;
+                
+                const timePerSet = reps * tempo;
+                const timeDisplay = exerciseElement.querySelector('.exercise-time');
+                
+                if (timeDisplay) {
+                    timeDisplay.textContent = `Time per set: ${timePerSet} seconds`;
+                }
+            } catch (error) {
+                console.error('Error updating exercise time:', error);
+            }
+        }
+
+        // Calculate and update all workout metrics
+        function updateCalculations() {
+            try {
+                // Get input values
+                const warmupTime = parseInt(document.getElementById('warmup-time').value) || 0;
+                const cooldownTime = parseInt(document.getElementById('cooldown-time').value) || 0;
+                const recoveryTime = parseInt(document.getElementById('recovery-time').value) || 0;
+                const restTime = parseInt(document.getElementById('rest-time').value) || 0;
+                
+                // Get all exercises
+                const exerciseElements = document.querySelectorAll('.exercise-item');
+                exercises = [];
+                
+                let totalExerciseTime = 0;
+                let totalRestTime = 0;
+                let totalTransitionTime = 0;
+                
+                exerciseElements.forEach(element => {
+                    const exerciseName = element.querySelector('.exercise-select').value;
+                    const sets = parseInt(element.querySelector('.sets-input').value) || 0;
+                    const reps = parseInt(element.querySelector('.reps-input').value) || 0;
+                    const tempo = parseInt(element.querySelector('.tempo-select').value) || 2;
+                    
+                    const exerciseTimePerSet = reps * tempo;
+                    const exerciseTotalTime = exerciseTimePerSet * sets;
+                    const exerciseRestTime = restTime * (sets - 1);
+                    
+                    exercises.push({
+                        name: exerciseName,
+                        sets: sets,
+                        reps: reps,
+                        tempo: tempo,
+                        timePerSet: exerciseTimePerSet,
+                        totalTime: exerciseTotalTime,
+                        restTime: exerciseRestTime
+                    });
+                    
+                    totalExerciseTime += exerciseTotalTime;
+                    totalRestTime += exerciseRestTime;
+                });
+                
+                // Calculate transition time
+                totalTransitionTime = recoveryTime * (exercises.length - 1);
+                
+                // Calculate total workout time
+                const totalWorkoutTimeSeconds = (warmupTime * 60) + totalExerciseTime + totalRestTime + totalTransitionTime + (cooldownTime * 60);
+                
+                // Update displays
+                document.getElementById('warmup-display').textContent = formatTime(warmupTime * 60);
+                document.getElementById('exercise-time-display').textContent = formatTime(totalExerciseTime);
+                document.getElementById('rest-time-display').textContent = formatTime(totalRestTime);
+                document.getElementById('transition-time-display').textContent = formatTime(totalTransitionTime);
+                document.getElementById('cooldown-display').textContent = formatTime(cooldownTime * 60);
+                document.getElementById('total-time').textContent = formatTime(totalWorkoutTimeSeconds);
+                
+                // Update progress bar (target is 45 minutes = 2700 seconds)
+                const progressPercentage = Math.min(100, (totalWorkoutTimeSeconds / 2700) * 100);
+                document.getElementById('time-progress').style.width = `${progressPercentage}%`;
+                
+                // Update charts
+                updateTimeDistributionChart(warmupTime * 60, totalExerciseTime, totalRestTime, totalTransitionTime, cooldownTime * 60);
+                
+                // Check challenge status if active
+                if (currentChallenge) {
+                    checkChallengeStatus(totalWorkoutTimeSeconds);
+                }
+                
+                console.log('Calculations updated:', {
+                    totalWorkoutTimeSeconds,
+                    totalExerciseTime,
+                    totalRestTime,
+                    totalTransitionTime
+                });
+            } catch (error) {
+                console.error('Error updating calculations:', error);
+            }
+        }
+
+        // Format time in seconds to MM:SS format
+        function formatTime(seconds) {
+            try {
+                if (typeof seconds !== 'number' || isNaN(seconds)) {
+                    return '00:00';
+                }
+                
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            } catch (error) {
+                console.error('Error formatting time:', error);
+                return '00:00';
+            }
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            try {
+                // Time Distribution Chart
+                const ctx1 = document.getElementById('time-distribution-chart').getContext('2d');
+                timeDistributionChart = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Warm-up', 'Exercise Time', 'Rest Time', 'Transition Time', 'Cool-down'],
+                        datasets: [{
+                            data: [300, 0, 0, 0, 300],
+                            backgroundColor: [
+                                'rgba(249, 115, 22, 0.7)',  // Orange
+                                'rgba(34, 197, 94, 0.7)',   // Green
+                                'rgba(234, 179, 8, 0.7)',   // Yellow
+                                'rgba(139, 92, 246, 0.7)',  // Purple
+                                'rgba(59, 130, 246, 0.7)'   // Blue
+                            ],
+                            borderColor: [
+                                'rgba(249, 115, 22, 1)',
+                                'rgba(34, 197, 94, 1)',
+                                'rgba(234, 179, 8, 1)',
+                                'rgba(139, 92, 246, 1)',
+                                'rgba(59, 130, 246, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time Distribution',
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                console.log('Charts initialized successfully');
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+            }
+        }
+
+        // Update time distribution chart
+        function updateTimeDistributionChart(warmup, exercise, rest, transition, cooldown) {
+            try {
+                if (!timeDistributionChart) return;
+                
+                timeDistributionChart.data.datasets[0].data = [warmup, exercise, rest, transition, cooldown];
+                timeDistributionChart.update();
+            } catch (error) {
+                console.error('Error updating time distribution chart:', error);
+            }
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            try {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Remove active class from all tab buttons
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active');
+                });
+                
+                // Show selected tab content
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                
+                // Add active class to clicked button
+                event.target.classList.add('active');
+                
+                // If switching to report tab, generate the report
+                if (tabName === 'report') {
+                    generateReport();
+                }
+                
+                console.log(`Switched to ${tabName} tab`);
+            } catch (error) {
+                console.error('Error switching tabs:', error);
+            }
+        }
+
+        // Start a challenge
+        function startChallenge(challengeType) {
+            try {
+                currentChallenge = challengeType;
+                
+                const challengeStatus = document.getElementById('challenge-status');
+                const challengeDetails = document.getElementById('challenge-details');
+                const challengeResult = document.getElementById('challenge-result');
+                
+                challengeStatus.classList.remove('hidden');
+                challengeResult.classList.add('hidden');
+                
+                // Reset workout
+                document.getElementById('exercises-container').innerHTML = '';
+                exercises = [];
+                exerciseCounter = 0;
+                
+                switch (challengeType) {
+                    case 'time':
+                        challengeDetails.innerHTML = `
+                            <p><strong>Challenge:</strong> Design a full-body workout in under 45 minutes.</p>
+                            <p><strong>Goal:</strong> Include at least 5 different exercises targeting major muscle groups.</p>
+                            <p><strong>Constraints:</strong> Minimum 2 sets per exercise, minimum 8 reps per set.</p>
+                        `;
+                        
+                        // Add 5 default exercises
+                        addExercise();
+                        addExercise();
+                        addExercise();
+                        addExercise();
+                        addExercise();
+                        
+                        // Set minimum values
+                        document.querySelectorAll('.sets-input').forEach(input => {
+                            input.value = 2;
+                            input.min = 2;
+                        });
+                        
+                        document.querySelectorAll('.reps-input').forEach(input => {
+                            input.value = 8;
+                            input.min = 8;
+                        });
+                        
+                        break;
+                        
+                    case 'exercise':
+                        challengeDetails.innerHTML = `
+                            <p><strong>Challenge:</strong> Complete these exercises in the shortest time possible.</p>
+                            <p><strong>Exercises:</strong> Squats, Push-ups, Rows, Plank, Lunges</p>
+                            <p><strong>Constraints:</strong> 3 sets of 12 reps for each exercise.</p>
+                        `;
+                        
+                        // Add specific exercises
+                        const specificExercises = ['Squats', 'Push-ups', 'Rows', 'Plank', 'Lunges'];
+                        specificExercises.forEach(exerciseName => {
+                            addExercise();
+                            const lastExercise = document.querySelector('.exercise-item:last-child');
+                            lastExercise.querySelector('.exercise-select').value = exerciseName;
+                            lastExercise.querySelector('.sets-input').value = 3;
+                            lastExercise.querySelector('.reps-input').value = 12;
+                            updateExerciseTime(lastExercise.id);
+                        });
+                        
+                        break;
+                        
+                    case 'free':
+                        challengeDetails.innerHTML = `
+                            <p><strong>Mode:</strong> Free Exploration</p>
+                            <p><strong>Goal:</strong> Experiment with different workout parameters without constraints.</p>
+                            <p><strong>Tips:</strong> Try different combinations of exercises, sets, reps, and rest times to see how they affect total workout duration.</p>
+                        `;
+                        
+                        // Add a few default exercises
+                        addExercise();
+                        addExercise();
+                        addExercise();
+                        
+                        break;
+                }
+                
+                updateCalculations();
+                
+                // Switch to builder tab
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.getElementById('builder-tab').classList.add('active');
+                
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    button.classList.remove('active');
+                });
+                document.querySelector('.tab-button').classList.add('active');
+                
+                console.log(`Started ${challengeType} challenge`);
+            } catch (error) {
+                console.error('Error starting challenge:', error);
+                alert('An error occurred while starting the challenge. Please try again.');
+            }
+        }
+
+        // Check challenge status
+        function checkChallengeStatus(totalTimeSeconds) {
+            try {
+                const challengeResult = document.getElementById('challenge-result');
+                challengeResult.classList.remove('hidden');
+                
+                switch (currentChallenge) {
+                    case 'time':
+                        const exerciseCount = exercises.length;
+                        const meetsExerciseCount = exerciseCount >= 5;
+                        const meetsTimeTarget = totalTimeSeconds <= 2700; // 45 minutes
+                        
+                        if (meetsExerciseCount && meetsTimeTarget) {
+                            challengeResult.innerHTML = `
+                                <div class="bg-green-100 text-green-800 p-3 rounded-md">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    <strong>Success!</strong> You've designed a full-body workout in under 45 minutes!
+                                </div>
+                            `;
+                        } else {
+                            let issues = [];
+                            if (!meetsExerciseCount) issues.push('Include at least 5 exercises');
+                            if (!meetsTimeTarget) issues.push('Reduce total time to under 45 minutes');
+                            
+                            challengeResult.innerHTML = `
+                                <div class="bg-yellow-100 text-yellow-800 p-3 rounded-md">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    <strong>In Progress:</strong> ${issues.join(' and ')}
+                                </div>
+                            `;
+                        }
+                        break;
+                        
+                    case 'exercise':
+                        challengeResult.innerHTML = `
+                            <div class="bg-blue-100 text-blue-800 p-3 rounded-md">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Current Time:</strong> ${formatTime(totalTimeSeconds)}
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'free':
+                        challengeResult.innerHTML = `
+                            <div class="bg-purple-100 text-purple-800 p-3 rounded-md">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                <strong>Exploring:</strong> Total workout time is ${formatTime(totalTimeSeconds)}
+                            </div>
+                        `;
+                        break;
+                }
+            } catch (error) {
+                console.error('Error checking challenge status:', error);
+            }
+        }
+
+        // Generate workout report
+        function generateReport() {
+            try {
+                // Get current values
+                const warmupTime = parseInt(document.getElementById('warmup-time').value) || 0;
+                const cooldownTime = parseInt(document.getElementById('cooldown-time').value) || 0;
+                const recoveryTime = parseInt(document.getElementById('recovery-time').value) || 0;
+                const restTime = parseInt(document.getElementById('rest-time').value) || 0;
+                
+                let totalExerciseTime = 0;
+                let totalRestTime = 0;
+                let totalTransitionTime = 0;
+                
+                // Calculate totals
+                exercises.forEach(exercise => {
+                    totalExerciseTime += exercise.totalTime;
+                    totalRestTime += exercise.restTime;
+                });
+                
+                totalTransitionTime = recoveryTime * (exercises.length - 1);
+                const totalWorkoutTimeSeconds = (warmupTime * 60) + totalExerciseTime + totalRestTime + totalTransitionTime + (cooldownTime * 60);
+                
+                // Generate workout summary
+                const summaryContainer = document.getElementById('workout-summary');
+                summaryContainer.innerHTML = `
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 mb-2">Workout Overview</h4>
+                        <p class="text-gray-600"><strong>Total Duration:</strong> ${formatTime(totalWorkoutTimeSeconds)}</p>
+                        <p class="text-gray-600"><strong>Exercises:</strong> ${exercises.length}</p>
+                        <p class="text-gray-600"><strong>Total Sets:</strong> ${exercises.reduce((sum, ex) => sum + ex.sets, 0)}</p>
+                        <p class="text-gray-600"><strong>Total Reps:</strong> ${exercises.reduce((sum, ex) => sum + (ex.sets * ex.reps), 0)}</p>
+                    </div>
+                `;
+                
+                // Add exercise details
+                const exerciseDetails = document.createElement('div');
+                exerciseDetails.className = 'bg-gray-50 p-4 rounded-lg mt-4';
+                exerciseDetails.innerHTML = '<h4 class="font-semibold text-gray-800 mb-2">Exercise Details</h4>';
+                
+                const exerciseList = document.createElement('ul');
+                exerciseList.className = 'space-y-2';
+                
+                exercises.forEach(exercise => {
+                    const li = document.createElement('li');
+                    li.className = 'text-gray-600';
+                    li.innerHTML = `<strong>${exercise.name}:</strong> ${exercise.sets} sets × ${exercise.reps} reps (${formatTime(exercise.totalTime)})`;
+                    exerciseList.appendChild(li);
+                });
+                
+                exerciseDetails.appendChild(exerciseList);
+                summaryContainer.appendChild(exerciseDetails);
+                
+                // Generate insights
+                const insightsContainer = document.getElementById('workout-insights');
+                insightsContainer.innerHTML = '';
+                
+                // Calculate percentages
+                const warmupPercentage = ((warmupTime * 60) / totalWorkoutTimeSeconds) * 100;
+                const exercisePercentage = (totalExerciseTime / totalWorkoutTimeSeconds) * 100;
+                const restPercentage = (totalRestTime / totalWorkoutTimeSeconds) * 100;
+                const transitionPercentage = (totalTransitionTime / totalWorkoutTimeSeconds) * 100;
+                const cooldownPercentage = ((cooldownTime * 60) / totalWorkoutTimeSeconds) * 100;
+                
+                // Create insight cards
+                const insights = [];
+                
+                if (exercisePercentage > 60) {
+                    insights.push({
+                        icon: 'fa-dumbbell',
+                        title: 'High Exercise Density',
+                        text: 'Your workout is exercise-dense with ' + exercisePercentage.toFixed(1) + '% of time spent on actual exercises. This is great for maximizing training efficiency.',
+                        color: 'green'
+                    });
+                } else if (exercisePercentage < 40) {
+                    insights.push({
+                        icon: 'fa-clock',
+                        title: 'Low Exercise Density',
+                        text: 'Only ' + exercisePercentage.toFixed(1) + '% of your workout time is spent on exercises. Consider reducing rest times or transitions to increase efficiency.',
+                        color: 'yellow'
+                    });
+                }
+                
+                if (restPercentage > 30) {
+                    insights.push({
+                        icon: 'fa-coffee',
+                        title: 'High Rest Time',
+                        text: 'Rest periods make up ' + restPercentage.toFixed(1) + '% of your workout. Consider reducing rest between sets for more time-efficient training.',
+                        color: 'blue'
+                    });
+                }
+                
+                if (exercises.length > 8) {
+                    insights.push({
+                        icon: 'fa-list',
+                        title: 'High Exercise Variety',
+                        text: 'Your workout includes ' + exercises.length + ' different exercises. While variety is good, consider if all exercises are necessary for your goals.',
+                        color: 'purple'
+                    });
+                } else if (exercises.length < 3) {
+                    insights.push({
+                        icon: 'fa-exclamation-triangle',
+                        title: 'Limited Exercise Variety',
+                        text: 'With only ' + exercises.length + ' exercises, consider adding more movements to ensure balanced muscle development.',
+                        color: 'orange'
+                    });
+                }
+                
+                if (totalWorkoutTimeSeconds > 3600) {
+                    insights.push({
+                        icon: 'fa-hourglass-half',
+                        title: 'Long Workout Duration',
+                        text: 'Your workout lasts over an hour. For most people, workouts of 45-60 minutes are optimal for maintaining intensity and focus.',
+                        color: 'red'
+                    });
+                } else if (totalWorkoutTimeSeconds < 1800) {
+                    insights.push({
+                        icon: 'fa-bolt',
+                        title: 'Short & Efficient',
+                        text: 'Your workout is under 30 minutes, making it very time-efficient. Great for busy schedules!',
+                        color: 'green'
+                    });
+                }
+                
+                // Display insights
+                if (insights.length === 0) {
+                    insights.push({
+                        icon: 'fa-check-circle',
+                        title: 'Well-Balanced Workout',
+                        text: 'Your workout shows a good balance of exercise time, rest, and transitions. Continue experimenting to find your optimal routine!',
+                        color: 'green'
+                    });
+                }
+                
+                insights.forEach(insight => {
+                    const card = document.createElement('div');
+                    card.className = `bg-${insight.color}-50 border-l-4 border-${insight.color}-500 p-4 rounded`;
+                    card.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="text-${insight.color}-500 text-xl mr-3 mt-1">
+                                <i class="fas ${insight.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${insight.title}</h4>
+                                <p class="text-gray-600 text-sm mt-1">${insight.text}</p>
+                            </div>
+                        </div>
+                    `;
+                    insightsContainer.appendChild(card);
+                });
+                
+                // Create pie chart
+                setTimeout(() => {
+                    createReportPieChart(warmupTime * 60, totalExerciseTime, totalRestTime, totalTransitionTime, cooldownTime * 60);
+                    createEfficiencyChart();
+                }, 100);
+                
+                console.log('Workout report generated');
+            } catch (error) {
+                console.error('Error generating report:', error);
+                alert('An error occurred while generating the report. Please try again.');
+            }
+        }
+
+        // Create report pie chart
+        function createReportPieChart(warmup, exercise, rest, transition, cooldown) {
+            try {
+                const ctx = document.getElementById('report-pie-chart').getContext('2d');
+                
+                // Destroy existing chart if it exists
+                if (reportPieChart) {
+                    reportPieChart.destroy();
+                }
+                
+                reportPieChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Warm-up', 'Exercise Time', 'Rest Time', 'Transition Time', 'Cool-down'],
+                        datasets: [{
+                            data: [warmup, exercise, rest, transition, cooldown],
+                            backgroundColor: [
+                                'rgba(249, 115, 22, 0.7)',  // Orange
+                                'rgba(34, 197, 94, 0.7)',   // Green
+                                'rgba(234, 179, 8, 0.7)',   // Yellow
+                                'rgba(139, 92, 246, 0.7)',  // Purple
+                                'rgba(59, 130, 246, 0.7)'   // Blue
+                            ],
+                            borderColor: [
+                                'rgba(249, 115, 22, 1)',
+                                'rgba(34, 197, 94, 1)',
+                                'rgba(234, 179, 8, 1)',
+                                'rgba(139, 92, 246, 1)',
+                                'rgba(59, 130, 246, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time Distribution (%)',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${formatTime(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating report pie chart:', error);
+            }
+        }
+
+        // Create efficiency chart
+        function createEfficiencyChart() {
+            try {
+                const ctx = document.getElementById('efficiency-chart').getContext('2d');
+                
+                // Destroy existing chart if it exists
+                if (efficiencyChart) {
+                    efficiencyChart.destroy();
+                }
+                
+                // Calculate efficiency metrics
+                const totalSets = exercises.reduce((sum, ex) => sum + ex.sets, 0);
+                const totalReps = exercises.reduce((sum, ex) => sum + (ex.sets * ex.reps), 0);
+                const totalExerciseTime = exercises.reduce((sum, ex) => sum + ex.totalTime, 0);
+                const totalRestTime = exercises.reduce((sum, ex) => sum + ex.restTime, 0);
+                const totalTime = totalExerciseTime + totalRestTime;
+                
+                const efficiencyMetrics = {
+                    'Exercises per Minute': (exercises.length / (totalTime / 60)).toFixed(2),
+                    'Sets per Minute': (totalSets / (totalTime / 60)).toFixed(2),
+                    'Reps per Minute': (totalReps / (totalTime / 60)).toFixed(2),
+                    'Exercise Efficiency': ((totalExerciseTime / totalTime) * 100).toFixed(1) + '%'
+                };
+                
+                efficiencyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(efficiencyMetrics),
+                        datasets: [{
+                            label: 'Efficiency Metrics',
+                            data: Object.values(efficiencyMetrics).map(val => {
+                                return typeof val === 'string' && val.includes('%') 
+                                    ? parseFloat(val) 
+                                    : parseFloat(val);
+                            }),
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.7)',
+                                'rgba(34, 197, 94, 0.7)',
+                                'rgba(234, 179, 8, 0.7)',
+                                'rgba(139, 92, 246, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(34, 197, 94, 1)',
+                                'rgba(234, 179, 8, 1)',
+                                'rgba(139, 92, 246, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Workout Efficiency Metrics',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        let formattedValue = value;
+                                        
+                                        if (label === 'Exercise Efficiency') {
+                                            formattedValue = value + '%';
+                                        } else if (label.includes('per Minute')) {
+                                            formattedValue = value.toFixed(2);
+                                        }
+                                        
+                                        return `${label}: ${formattedValue}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating efficiency chart:', error);
+            }
+        }
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
